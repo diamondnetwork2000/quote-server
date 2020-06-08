@@ -187,3 +187,23 @@ func (csr *CandleStickRecord) Update(t time.Time, price sdk.Dec, amount int64) {
 	csr.MinuteCS[t.UTC().Minute()].update(price, amount)
 	csr.LastUpdateTime = t
 }
+func (csr *CandleStickRecord) GetCurrentDayCandleStick() *CandleStick {
+        if csr == nil {
+            return nil
+        }
+	hourCS := merge(csr.HourCS[:])
+	minuteCS := merge(csr.MinuteCS[:])
+	t := []baseCandleStick{minuteCS, hourCS}
+	dayCS := merge(t)
+	cs := csr.newCandleStick(dayCS,time.Now().UTC().UnixNano() / int64(time.Second), Day)
+	return cs
+}
+
+func (csr *CandleStickRecord) GetCurrentHourCandleStick() *CandleStick {
+        if csr == nil {
+           return nil
+        }
+	minuteCS := merge(csr.MinuteCS[:])
+	cs := csr.newCandleStick(minuteCS, time.Now().UTC().UnixNano() / int64(time.Second), Minute)
+	return cs
+}

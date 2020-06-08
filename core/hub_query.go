@@ -1,6 +1,7 @@
 package core
 
 import (
+        gotime "time"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -99,6 +100,28 @@ func (hub *Hub) QueryCandleStick(market string, timespan byte, time int64, sid i
 		iter.Close()
 		hub.dbMutex.RUnlock()
 	}()
+
+        now := gotime.Now()
+	beginningOfDay := gotime.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, gotime.UTC)
+	beginningOfHour := gotime.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, gotime.UTC)
+
+	if timespan == Day && time >= beginningOfDay.UnixNano() / int64(gotime.Second){
+		//如果是查当天k线，则需要把当天到目前为止的小时k线，加上最后一小时的分钟k线构造出当天k线
+		d := hub.csMan.CsrMap[market].GetCurrentDayCandleStick()
+                if d != nil {
+		bz, _ := json.Marshal(d)
+		data = append(data, json.RawMessage(bz))
+                }
+	}
+
+	if timespan == Hour && time >= beginningOfHour.UnixNano() / int64(gotime.Second) {
+	    //如果是查当前小时k线，则需要最后一小时范围的分钟k线都查询出来
+	    h := hub.csMan.CsrMap[market].GetCurrentHourCandleStick()
+                if h != nil {
+		bz, _ := json.Marshal(h)
+		data = append(data, json.RawMessage(bz))
+                }
+	}
 	for ; iter.Valid(); iter.Next() {
 		data = append(data, json.RawMessage(iter.Value()))
 		if count--; count == 0 {
@@ -221,6 +244,11 @@ func (hub *Hub) QueryOrderAboutToken(tag, token, account string, time int64, sid
 		return hub.query(false, firstByte, []byte(account), time, sid, count, nil)
 	}
 	return hub.query(false, firstByte, []byte(account), time, sid, count, func(tag byte, entry []byte) bool {
+
+                if strings.Index(token,"/") > 0 {
+                    tradingPair := fmt.Sprintf("\"trading_pair\":\"%s", token)
+                    return strings.Index(string(entry), tradingPair) > 0
+                }
 		s1 := fmt.Sprintf("/%s\",\"height\":", token)
 		s2 := fmt.Sprintf("\"trading_pair\":\"%s/", token)
 		if tag == CreateOrderEndByte {
@@ -298,12 +326,18 @@ func (hub *Hub) QueryIncomeAboutToken(token, account string, time int64, sid int
 
 func (hub *Hub) QueryTxAboutToken(token, account string, time int64, sid int64, count int) (
 	data []json.RawMessage, timesid []int64) {
-	if token == "" { // no token-based-filtering
+	if token == "" || token == "dgss" { // no token-based-filtering
 		data, _, timesid = hub.query(true, TxByte, []byte(account), time, sid, count, nil)
 		return
 	}
 	data, _, timesid = hub.query(true, TxByte, []byte(account), time, sid, count,
 		func(tag byte, entry []byte) bool {
+                        if strings.Contains(string(entry),"\"side\":1") {
+                            return strings.Contains(string(entry),"/" + token)
+                        }
+                        if strings.Contains(string(entry), "\"side\":2") {
+                            return strings.Contains(string(entry), token + "/")
+                        }
 			return strings.Contains(string(entry), "|"+token+"|")
 		})
 	return
