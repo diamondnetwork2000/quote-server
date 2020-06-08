@@ -176,7 +176,9 @@ func (hub *Hub) ConsumeMessage(msgType string, bz []byte) {
 	if hub.skipHeight {
 		return
 	}
-	hub.recordMsg(msgType, bz)
+        nbz := make([]byte, len(bz))
+        copy(nbz, bz)
+	hub.recordMsg(msgType, nbz)
 	if !hub.isTimeToHandleMsg(msgType) {
 		return
 	}

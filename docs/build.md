@@ -7,4 +7,4 @@
 
 ## Build trade-server
 
-`go build github.com/coinexchain/trade-server`
+`GO111MODULE=on go build .`
