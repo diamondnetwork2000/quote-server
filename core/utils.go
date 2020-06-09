@@ -326,6 +326,19 @@ func getTokenNameFromAmount(amount string) string {
 	return tokenName
 }
 
+func getQuantityFromAmount(amount string) string {
+	quantity := ""
+	for i, c := range amount {
+		if c < '0' || c > '9' {
+			quantity = amount[0:i]
+			break
+		}
+	}
+	return quantity
+}
+
+
+
 func getMarketName(info MarketInfo) string {
 	return info.Stock + "/" + info.Money
 }

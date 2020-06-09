@@ -343,6 +343,26 @@ func (hub *Hub) QueryTxAboutToken(token, account string, time int64, sid int64, 
 	return
 }
 
+func (hub *Hub) QueryBillingAboutToken(token, account string, time int64, sid int64, count int) (
+	data []json.RawMessage, timesid []int64) {
+
+	if token == "" { // no token-based-filtering
+		data, _, timesid = hub.query(false, BillingByte, []byte(account), time, sid, count, nil)
+		return
+	}
+	data, _, timesid = hub.query(false, BillingByte, []byte(account), time, sid, count,
+		func(tag byte, entry []byte) bool {
+            if token == "dgss" {
+				return strings.Contains(string(entry), "\"type\":1") ||
+				strings.Contains(string(entry), "\"type\":3") ||
+				strings.Contains(string(entry), "\"type\":4")
+			}   
+			return strings.Contains(string(entry), "\"token\":\"" + token + "\"")
+		})
+	return
+}
+
+
 type filterFunc func(tag byte, entry []byte) bool
 
 func (hub *Hub) query(fetchTxDetail bool, firstByteIn byte, bz []byte, time int64, sid int64,

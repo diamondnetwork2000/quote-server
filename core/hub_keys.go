@@ -29,7 +29,7 @@ const (
 	LockedByte       = byte(0x36) //-, []byte(addr), 0, currBlockTime, hub.sid, lastByte=0
 	DonationByte     = byte(0x38) //-, []byte{}, 0, currBlockTime, hub.sid, lastByte=0
 	DelistByte       = byte(0x3A) //-, []byte(market), 0, currBlockTime, hub.sid, lastByte=0
-
+	
 	// Used to store meta information
 	OffsetByte = byte(0xF0)
 	DumpByte   = byte(0xF1)
@@ -44,6 +44,8 @@ const (
 	CreateMarketByte        = byte(0x46)
 	ValidatorCommissionByte = byte(0x48)
 	DelegatorRewardsByte    = byte(0x50)
+
+	BillingByte       = byte(0x60) //-, []byte(market), 0, currBlockTime, hub.sid, lastByte=0
 )
 
 func (hub *Hub) getCandleStickKey(market string, timespan byte) []byte {
@@ -88,6 +90,9 @@ func (hub *Hub) getBancorTradeKey(addr string) []byte {
 }
 func (hub *Hub) getIncomeKey(addr string) []byte {
 	return hub.getKeyFromBytes(IncomeByte, []byte(addr), byte(0))
+}
+func (hub *Hub) getBillingKey(addr string) []byte {
+	return hub.getKeyFromBytes(BillingByte, []byte(addr), byte(0))
 }
 func (hub *Hub) getTxKey(addr string) []byte {
 	return hub.getKeyFromBytes(TxByte, []byte(addr), byte(0))

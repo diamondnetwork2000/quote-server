@@ -146,6 +146,19 @@ type NotificationTx struct {
 	ExtraInfo    string           `json:"extra_info,omitempty"`
 }
 
+type Billing struct {
+	Sender    string `json:"sender"`
+	Recipient      string          `json:"recipient"`
+	//1: transfer out 2: trasfer in 3: place order 4: cancel order 5: deal
+	Type int64  `json:"type"`
+	OrderId string `json:"orderId"`
+	Token      string          `json:"token"`
+	Amount         int64           `json:"amount"`
+	Fee         int64           `json:"fee"`
+	Height         int64            `json:"height"`
+	TxHash         string           `json:"hash"`
+}
+
 // ------------------------
 // manager info
 // someone is going to delegate a validator to stake

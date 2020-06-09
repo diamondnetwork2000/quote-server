@@ -10,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	log "github.com/sirupsen/logrus"
@@ -471,6 +472,48 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 		hub.batch.Set(k, []byte("|"+tokenName+"|"+v.Hash))
 		hub.sid++
 		hub.msgsChannel <- MsgToPush{topic: IncomeKey, bz: bz, extra: recipient}
+
+		billingKey := hub.getBillingKey(recipient)
+		quantityStr := getQuantityFromAmount(transRec.Amount)
+		quantity,_ := strconv.Atoi(quantityStr)
+
+		//some transfer is zero amount
+		if quantity > 0 {
+			billing := Billing{
+				Sender: transRec.Sender,
+				Recipient: transRec.Recipient,
+				Type: 2,
+				OrderId: "",
+				Token: tokenName,
+				Amount: int64(quantity),
+				Fee: 0,
+				Height: v.Height,
+				TxHash: v.Hash,
+			 }
+	 
+			 billingByte,_ := json.Marshal(billing)
+			 hub.batch.Set(billingKey, billingByte)
+			 hub.sid++
+	 
+			 //sender
+			 billingKey = hub.getBillingKey(transRec.Sender)
+	 
+			 billing = Billing{
+				Sender: transRec.Sender,
+				Recipient: transRec.Recipient,
+				Type: 1,
+				OrderId: "",
+				Token: tokenName,
+				Amount: int64(-quantity),
+				Fee: 100000,
+				Height: v.Height,
+				TxHash: v.Hash,
+			 }
+	 
+			 billingByte,_ = json.Marshal(billing)
+			 hub.batch.Set(billingKey, billingByte)
+			 hub.sid++
+		}
 	}
 
 	tokensAndHash := make([]byte, 1, 100)
