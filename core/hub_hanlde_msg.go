@@ -769,6 +769,7 @@ func (hub *Hub) handleCreateOrderInfo(bz []byte) {
 	//Update depth info
 	triman, ok := hub.managersMap[v.TradingPair]
 	if !ok {
+		log.Errorf("Failed to find depth for trading pair %s", v.TradingPair)
 		return
 	}
 	amount := sdk.NewInt(v.Quantity)
@@ -863,6 +864,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	//Update depth info
 	triman, ok := hub.managersMap[v.TradingPair]
 	if !ok {
+		log.Errorf("Failed to find depth for trading pair %s", v.TradingPair)
 		return
 	}
 	negStock := sdk.NewInt(-v.CurrStock)
