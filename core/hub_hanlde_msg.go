@@ -483,7 +483,7 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 				Sender: transRec.Sender,
 				Recipient: transRec.Recipient,
 				Type: 2,
-				OrderId: "",
+				OrderID: "",
 				Token: tokenName,
 				Amount: int64(quantity),
 				Fee: 0,
@@ -502,7 +502,7 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 				Sender: transRec.Sender,
 				Recipient: transRec.Recipient,
 				Type: 1,
-				OrderId: "",
+				OrderID: "",
 				Token: tokenName,
 				Amount: int64(-quantity),
 				Fee: 100000,
@@ -742,6 +742,30 @@ func (hub *Hub) handleCreateOrderInfo(bz []byte) {
 	amount := sdk.NewInt(v.Quantity)
 
 	triman.AddDeltaChange(v.Side == SELL, v.Price, amount)
+
+	
+	tokenName := getMoneyName(v.TradingPair)
+	//selling
+	if v.Side == 2 {
+		tokenName = getStockName(v.TradingPair)
+	}
+
+    billingKey := hub.getBillingKey(v.Sender)
+	billing := Billing{
+		Sender: v.Sender,
+		Recipient: "",
+		Type: 3,
+		OrderID: v.OrderID,
+		Token: tokenName,
+		Amount: -v.Freeze,
+		Fee: 100000,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+	 }
+
+	 billingByte,_ := json.Marshal(billing)
+	 hub.batch.Set(billingKey, billingByte)
+	 hub.sid++
 }
 
 func (hub *Hub) handleFillOrderInfo(bz []byte) {
@@ -790,6 +814,34 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	}
 	negStock := sdk.NewInt(-v.CurrStock)
 	triman.AddDeltaChange(v.Side == SELL, v.Price, negStock)
+
+	tokenName := getMoneyName(v.TradingPair)
+	//selling
+	if v.Side == 1 {
+		tokenName = getStockName(v.TradingPair)
+	}
+
+	quantity := v.DealStock
+	if v.Side == 2 {
+		quantity = v.DealMoney
+	}
+ 	
+	billingKey := hub.getBillingKey(accAndSeq[0])
+	billing := Billing{
+		Sender: accAndSeq[0],
+		Recipient: "",
+		Type: 5,
+		OrderID: v.OrderID,
+		Token: tokenName,
+		Amount: quantity,
+		Fee: 0,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+	 }
+
+	 billingByte,_ := json.Marshal(billing)
+	 hub.batch.Set(billingKey, billingByte)
+	 hub.sid++
 }
 
 func (hub *Hub) handleCancelOrderInfo(bz []byte) {
@@ -823,6 +875,29 @@ func (hub *Hub) handleCancelOrderInfo(bz []byte) {
 	triman.AddDeltaChange(v.Side == SELL, v.Price, negStock)
 	//Push to subscribers
 	hub.msgsChannel <- MsgToPush{topic: CancelOrderKey, bz: bz, extra: accAndSeq[0]}
+
+	tokenName := getMoneyName(v.TradingPair)
+	//selling
+	if v.Side == 2 {
+		tokenName = getStockName(v.TradingPair)
+	}
+
+	billingKey := hub.getBillingKey(accAndSeq[0])
+	billing := Billing{
+		Sender: accAndSeq[0],
+		Recipient: "",
+		Type: 4,
+		OrderID: v.OrderID,
+		Token: tokenName,
+		Amount: v.LeftStock,
+		Fee: 100000,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+	 }
+
+	 billingByte,_ := json.Marshal(billing)
+	 hub.batch.Set(billingKey, billingByte)
+	 hub.sid++
 }
 
 func (hub *Hub) handleMsgBancorTradeInfoForKafka(bz []byte) {

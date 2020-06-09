@@ -151,7 +151,7 @@ type Billing struct {
 	Recipient      string          `json:"recipient"`
 	//1: transfer out 2: trasfer in 3: place order 4: cancel order 5: deal
 	Type int64  `json:"type"`
-	OrderId string `json:"orderId"`
+	OrderID string `json:"order_id"`
 	Token      string          `json:"token"`
 	Amount         int64           `json:"amount"`
 	Fee         int64           `json:"fee"`

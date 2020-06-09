@@ -343,6 +343,16 @@ func getMarketName(info MarketInfo) string {
 	return info.Stock + "/" + info.Money
 }
 
+func getStockName(tradingPair string) string {
+	split := strings.Split(tradingPair,"/")
+	return split[0]
+}
+
+func getMoneyName(tradingPair string) string {
+	split := strings.Split(tradingPair,"/")
+	return split[1]
+}
+
 func unmarshalAndLogErr(bz []byte, v interface{}) error {
 	err := json.Unmarshal(bz, v)
 	if err != nil {
