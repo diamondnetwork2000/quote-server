@@ -149,14 +149,20 @@ type NotificationTx struct {
 type Billing struct {
 	Sender    string `json:"sender"`
 	Recipient      string          `json:"recipient"`
-	//1: transfer out 2: trasfer in 3: place order 4: cancel order 5: deal
+	//1: transfer out 2: trasfer in 3: freeze token 4: un-freeze token 5: fee
 	Type int64  `json:"type"`
 	OrderID string `json:"order_id"`
 	Token      string          `json:"token"`
 	Amount         int64           `json:"amount"`
-	Fee         int64           `json:"fee"`
+	FreezeAmount int64           `json:"freeze_amount"`
+	Fee          int64     `json:"fee"`
 	Height         int64            `json:"height"`
-	TxHash         string           `json:"hash"`
+	TxHash         string           `json:"tx_hash"`
+	Memo    string `json:"memo"`
+}
+
+type TxMemo struct {
+	Memo    string `json:"memo"`
 }
 
 // ------------------------

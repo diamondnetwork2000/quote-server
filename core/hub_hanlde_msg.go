@@ -478,6 +478,13 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 		quantity,_ := strconv.Atoi(quantityStr)
 
 		//some transfer is zero amount
+		var memo TxMemo
+		err = json.Unmarshal([]byte(v.TxJSON), &memo)
+		if err != nil {
+			hub.Log(fmt.Sprintf("Error in Unmarshal Memo: %s", string(bz)))
+		    return
+		}
+
 		if quantity > 0 {
 			billing := Billing{
 				Sender: transRec.Sender,
@@ -486,9 +493,11 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 				OrderID: "",
 				Token: tokenName,
 				Amount: int64(quantity),
+				FreezeAmount: 0,
 				Fee: 0,
 				Height: v.Height,
 				TxHash: v.Hash,
+				Memo: memo.Memo,
 			 }
 	 
 			 billingByte,_ := json.Marshal(billing)
@@ -505,9 +514,32 @@ func (hub *Hub) handleNotificationTx(bz []byte) {
 				OrderID: "",
 				Token: tokenName,
 				Amount: int64(-quantity),
+				FreezeAmount: 0,
 				Fee: 100000,
 				Height: v.Height,
 				TxHash: v.Hash,
+				Memo: memo.Memo,
+			 }
+	 
+			 billingByte,_ = json.Marshal(billing)
+			 hub.batch.Set(billingKey, billingByte)
+			 hub.sid++
+
+			 //Sender has a fee billing
+			 billingKey = hub.getBillingKey(transRec.Sender)
+	 
+			 billing = Billing{
+				Sender: transRec.Sender,
+				Recipient: "",
+				Type: 5,
+				OrderID: "",
+				Token: "dgss",
+				Amount: -100000,
+				FreezeAmount: 0,
+				Fee: 0,
+				Height: v.Height,
+				TxHash: v.Hash,
+				Memo: memo.Memo,
 			 }
 	 
 			 billingByte,_ = json.Marshal(billing)
@@ -758,12 +790,33 @@ func (hub *Hub) handleCreateOrderInfo(bz []byte) {
 		OrderID: v.OrderID,
 		Token: tokenName,
 		Amount: -v.Freeze,
+		FreezeAmount: v.Freeze,
 		Fee: 100000,
 		Height: v.Height,
 		TxHash: hub.currTxHashID,
+		Memo: "",
 	 }
 
 	 billingByte,_ := json.Marshal(billing)
+	 hub.batch.Set(billingKey, billingByte)
+	 hub.sid++
+
+	billingKey = hub.getBillingKey(v.Sender)
+	billing = Billing{
+		Sender: v.Sender,
+		Recipient: "",
+		Type: 5,
+		OrderID: v.OrderID,
+		Token: "dgss",
+		Amount: -100000,
+		FreezeAmount: 0,
+		Fee: 0,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+		Memo: "",
+	 }
+
+	 billingByte,_ = json.Marshal(billing)
 	 hub.batch.Set(billingKey, billingByte)
 	 hub.sid++
 }
@@ -815,31 +868,52 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	negStock := sdk.NewInt(-v.CurrStock)
 	triman.AddDeltaChange(v.Side == SELL, v.Price, negStock)
 
-	tokenName := getMoneyName(v.TradingPair)
-	//selling
-	if v.Side == 1 {
-		tokenName = getStockName(v.TradingPair)
+	incomeToken := getStockName(v.TradingPair)
+	unfreezeToken := getMoneyName(v.TradingPair)
+	income := v.CurrStock
+	unfreeze := v.CurrMoney
+    if v.Side == SELL {
+		income = v.CurrMoney
+		unfreeze = v.CurrStock
+		incomeToken = getMoneyName(v.TradingPair)
+	    unfreezeToken = getStockName(v.TradingPair)
 	}
+	
 
-	quantity := v.DealStock
-	if v.Side == 2 {
-		quantity = v.DealMoney
-	}
- 	
 	billingKey := hub.getBillingKey(accAndSeq[0])
 	billing := Billing{
 		Sender: accAndSeq[0],
 		Recipient: "",
-		Type: 5,
+		Type: 2,
 		OrderID: v.OrderID,
-		Token: tokenName,
-		Amount: quantity,
+		Token: incomeToken,
+		Amount: income,
+		FreezeAmount: 0,
 		Fee: 0,
 		Height: v.Height,
 		TxHash: hub.currTxHashID,
+		Memo: "",
 	 }
 
 	 billingByte,_ := json.Marshal(billing)
+	 hub.batch.Set(billingKey, billingByte)
+	 hub.sid++
+
+	 billing = Billing{
+		Sender: accAndSeq[0],
+		Recipient: "",
+		Type: 4,
+		OrderID: v.OrderID,
+		Token: unfreezeToken,
+		Amount: 0,
+		FreezeAmount: -unfreeze,
+		Fee: 0,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+		Memo: "",
+	 }
+
+	 billingByte,_ = json.Marshal(billing)
 	 hub.batch.Set(billingKey, billingByte)
 	 hub.sid++
 }
@@ -877,11 +951,14 @@ func (hub *Hub) handleCancelOrderInfo(bz []byte) {
 	hub.msgsChannel <- MsgToPush{topic: CancelOrderKey, bz: bz, extra: accAndSeq[0]}
 
 	tokenName := getMoneyName(v.TradingPair)
+	leftQuantity := v.RemainAmount
 	//selling
 	if v.Side == 2 {
 		tokenName = getStockName(v.TradingPair)
+		leftQuantity = v.LeftStock
 	}
 
+	if leftQuantity > 0 {
 	billingKey := hub.getBillingKey(accAndSeq[0])
 	billing := Billing{
 		Sender: accAndSeq[0],
@@ -889,15 +966,41 @@ func (hub *Hub) handleCancelOrderInfo(bz []byte) {
 		Type: 4,
 		OrderID: v.OrderID,
 		Token: tokenName,
-		Amount: v.LeftStock,
+		Amount: leftQuantity,
+		FreezeAmount: -leftQuantity,
 		Fee: 100000,
 		Height: v.Height,
 		TxHash: hub.currTxHashID,
+		Memo: v.DelReason,
 	 }
 
-	 billingByte,_ := json.Marshal(billing)
+	 
+	billingByte,_ := json.Marshal(billing)
+	
+		hub.batch.Set(billingKey, billingByte)
+	    hub.sid++ 
+	
+	 
+
+	billingKey = hub.getBillingKey(accAndSeq[0])
+	billing = Billing{
+		Sender: accAndSeq[0],
+		Recipient: "",
+		Type: 5,
+		OrderID: v.OrderID,
+		Token: "dgss",
+		Amount: -100000,
+		FreezeAmount: 0,
+		Fee: 0,
+		Height: v.Height,
+		TxHash: hub.currTxHashID,
+		Memo: v.DelReason,
+	 }
+
+	 billingByte,_ = json.Marshal(billing)
 	 hub.batch.Set(billingKey, billingByte)
 	 hub.sid++
+	}
 }
 
 func (hub *Hub) handleMsgBancorTradeInfoForKafka(bz []byte) {

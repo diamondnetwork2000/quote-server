@@ -351,12 +351,7 @@ func (hub *Hub) QueryBillingAboutToken(token, account string, time int64, sid in
 		return
 	}
 	data, _, timesid = hub.query(false, BillingByte, []byte(account), time, sid, count,
-		func(tag byte, entry []byte) bool {
-            if token == "dgss" {
-				return strings.Contains(string(entry), "\"type\":1") ||
-				strings.Contains(string(entry), "\"type\":3") ||
-				strings.Contains(string(entry), "\"type\":4")
-			}   
+		func(tag byte, entry []byte) bool {   
 			return strings.Contains(string(entry), "\"token\":\"" + token + "\"")
 		})
 	return
