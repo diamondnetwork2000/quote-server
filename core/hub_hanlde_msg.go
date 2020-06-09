@@ -884,7 +884,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	billing := Billing{
 		Sender: accAndSeq[0],
 		Recipient: "",
-		Type: 2,
+		Type: 6,
 		OrderID: v.OrderID,
 		Token: incomeToken,
 		Amount: income,
@@ -902,7 +902,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	 billing = Billing{
 		Sender: accAndSeq[0],
 		Recipient: "",
-		Type: 4,
+		Type: 6,
 		OrderID: v.OrderID,
 		Token: unfreezeToken,
 		Amount: 0,

@@ -149,7 +149,7 @@ type NotificationTx struct {
 type Billing struct {
 	Sender    string `json:"sender"`
 	Recipient      string          `json:"recipient"`
-	//1: transfer out 2: trasfer in 3: freeze token 4: un-freeze token 5: fee
+	//1: transfer out 2: trasfer in 3: create order 4: cancel order 5: fee 6: deal order
 	Type int64  `json:"type"`
 	OrderID string `json:"order_id"`
 	Token      string          `json:"token"`
