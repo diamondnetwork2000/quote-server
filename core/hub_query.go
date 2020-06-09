@@ -330,10 +330,10 @@ func (hub *Hub) QueryTxAboutToken(token, account string, time int64, sid int64, 
 	}
 	data, _, timesid = hub.query(true, TxByte, []byte(account), time, sid, count,
 		func(tag byte, entry []byte) bool {
-                        if strings.Contains(string(entry),"\"side\":1") {
+                        if strings.Contains(string(entry),"\\\"side\\\":1") {
                             return strings.Contains(string(entry),"/" + token)
                         }
-                        if strings.Contains(string(entry), "\"side\":2") {
+                        if strings.Contains(string(entry), "\\\"side\\\":2") {
                             return strings.Contains(string(entry), token + "/")
                         }
 			return strings.Contains(string(entry), "|"+token+"|")
@@ -392,8 +392,9 @@ func (hub *Hub) query(fetchTxDetail bool, firstByteIn byte, bz []byte, time int6
 		timeBytes := iKey[idx-8 : idx]
 		timeNum := binary.BigEndian.Uint64(timeBytes)
 		entry := json.RawMessage(iter.Value())
+		beforeFilterOut := false
 		if filter != nil && !filter(tag, entry) {
-			continue
+			beforeFilterOut = true
 		}
 		if fetchTxDetail { // iter.Value is not desired data, it's just tx_hash which points to the desired data
 			hexTxHashID := getTxHashID(iter.Value())
@@ -401,6 +402,13 @@ func (hub *Hub) query(fetchTxDetail bool, firstByteIn byte, bz []byte, time int6
 			key = append(key, timeBytes...)
 			entry = hub.db.Get(key)
 		}
+
+		//If failed for 2 rounds, then ignore this element
+		if filter != nil && !filter(tag, entry) && beforeFilterOut {
+			continue
+		}
+
+
 		if firstByteIn == DelistsByte {
 			data = append(data, iKey[2:iKey[1]+2]) // length = iKey[1], market name = iKey[2:length+2]
 		}

@@ -901,6 +901,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	 hub.batch.Set(billingKey, billingByte)
 	 hub.sid++
 
+	 //Note: everytime you save a new value, you must get a new key, otherwise old value is overwrite
 	 billingKey = hub.getBillingKey(accAndSeq[0])
 	 billing = Billing {
 		Sender: accAndSeq[0],
