@@ -883,7 +883,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	
 
 	billingKey := hub.getBillingKey(accAndSeq[0])
-	billing := Billing{
+	billing := Billing {
 		Sender: accAndSeq[0],
 		Recipient: "",
 		Type: 6,
@@ -901,7 +901,8 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	 hub.batch.Set(billingKey, billingByte)
 	 hub.sid++
 
-	 billing = Billing{
+	 billingKey = hub.getBillingKey(accAndSeq[0])
+	 billing = Billing {
 		Sender: accAndSeq[0],
 		Recipient: "",
 		Type: 6,
@@ -979,11 +980,10 @@ func (hub *Hub) handleCancelOrderInfo(bz []byte) {
 	 
 	billingByte,_ := json.Marshal(billing)
 	
-		hub.batch.Set(billingKey, billingByte)
-	    hub.sid++ 
+	hub.batch.Set(billingKey, billingByte)
+	hub.sid++ 
 	
-	 
-
+	
 	billingKey = hub.getBillingKey(accAndSeq[0])
 	billing = Billing{
 		Sender: accAndSeq[0],
