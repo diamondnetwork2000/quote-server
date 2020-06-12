@@ -906,7 +906,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	 hub.sid++
 
 	 //Note: everytime you save a new value, you must get a new key, otherwise old value is overwrite
-	 billingKey = hub.getBillingKey(accAndSeq[0])
+	 /*billingKey = hub.getBillingKey(accAndSeq[0])
 	 billing = Billing {
 		Sender: accAndSeq[0],
 		Recipient: "",
@@ -923,7 +923,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 
 	 billingByte,_ = json.Marshal(billing)
 	 hub.batch.Set(billingKey, billingByte)
-	 hub.sid++
+	 hub.sid++*/
 }
 
 func (hub *Hub) handleCancelOrderInfo(bz []byte) {
