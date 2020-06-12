@@ -872,10 +872,14 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 
 	incomeToken := getStockName(v.TradingPair)
 	unfreezeToken := getMoneyName(v.TradingPair)
+	
 	income := v.CurrStock
 	unfreeze := v.CurrMoney
+    incomeFee := v.CurrStockFee
+
     if v.Side == SELL {
 		income = v.CurrMoney
+		incomeFee = v.CurrMoneyFee
 		unfreeze = v.CurrStock
 		incomeToken = getMoneyName(v.TradingPair)
 	    unfreezeToken = getStockName(v.TradingPair)
@@ -889,7 +893,7 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 		Type: 6,
 		OrderID: v.OrderID,
 		Token: incomeToken,
-		Amount: income,
+		Amount: income - incomeFee,
 		FreezeAmount: 0,
 		Fee: 0,
 		Height: v.Height,

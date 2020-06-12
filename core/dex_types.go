@@ -61,6 +61,7 @@ type CreateOrderInfo struct {
 	FrozenCommission int64 `json:"frozen_commission,omitempty"`
 
 	TxHash string `json:"tx_hash,omitempty"`
+	FeeRate  sdk.Dec  `json:"fee_rate"`
 }
 
 // another guy fills someone's order
@@ -79,6 +80,12 @@ type FillOrderInfo struct {
 	CurrStock int64   `json:"curr_stock"`
 	CurrMoney int64   `json:"curr_money"`
 	FillPrice sdk.Dec `json:"fill_price"`
+	//how much stock is transfered to platform in this deal
+	CurrStockFee int64 `json:"curr_stock_fee"`
+	CurrMoneyFee int64 `json:"curr_money_fee"`
+	//how much stock is transfered to platform until this deal
+	DealStockFee int64   `json:"deal_stock_fee"`
+	DealMoneyFee int64   `json:"deal_money_fee"`
 }
 
 // someone who has created an order before, but now he/she wants to cancel it
