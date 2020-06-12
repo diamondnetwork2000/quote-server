@@ -871,18 +871,18 @@ func (hub *Hub) handleFillOrderInfo(bz []byte) {
 	triman.AddDeltaChange(v.Side == SELL, v.Price, negStock)
 
 	incomeToken := getStockName(v.TradingPair)
-	unfreezeToken := getMoneyName(v.TradingPair)
+	//unfreezeToken := getMoneyName(v.TradingPair)
 	
 	income := v.CurrStock
-	unfreeze := v.CurrMoney
+	//unfreeze := v.CurrMoney
     incomeFee := v.CurrStockFee
 
     if v.Side == SELL {
 		income = v.CurrMoney
 		incomeFee = v.CurrMoneyFee
-		unfreeze = v.CurrStock
+		//unfreeze = v.CurrStock
 		incomeToken = getMoneyName(v.TradingPair)
-	    unfreezeToken = getStockName(v.TradingPair)
+	   // unfreezeToken = getStockName(v.TradingPair)
 	}
 	
 
