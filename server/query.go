@@ -113,6 +113,22 @@ func QueryLockedRequestHandlerFn(hub *core.Hub) http.HandlerFunc {
 	}
 }
 
+func QueryLast24HoursCandleSticksRequestHandlerFn(hub *core.Hub) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest,
+				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			return
+		}
+
+		market := r.FormValue(queryKeyMarket)
+		
+		data := hub.QueryLast24HoursCandleStick(market)
+
+		postQueryResponse(w, data)
+	}
+}
 func QueryCandleSticksRequestHandlerFn(hub *core.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()

@@ -33,6 +33,7 @@ func registerHandler(hub *core.Hub, wsManager *core.WebsocketManager, proxy bool
 	router.HandleFunc("/market/tickers", QueryTickersRequestHandlerFn(hub)).Methods("GET")
 	router.HandleFunc("/market/depths", QueryDepthsRequestHandlerFn(hub)).Methods("GET")
 	router.HandleFunc("/market/candle-sticks", QueryCandleSticksRequestHandlerFn(hub)).Methods("GET")
+	router.HandleFunc("/market/last-24hours-candle-stick", QueryLast24HoursCandleSticksRequestHandlerFn(hub)).Methods("GET")
 	router.HandleFunc("/market/user-orders", QueryOrdersRequestHandlerFn(hub)).Methods("GET")
 	router.HandleFunc("/market/deals", QueryDealsRequestHandlerFn(hub)).Methods("GET")
 	router.HandleFunc("/market/delist", QueryDelistRequestHandlerFn(hub)).Methods("GET")

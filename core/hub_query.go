@@ -129,6 +129,36 @@ func (hub *Hub) QueryCandleStick(market string, timespan byte, time int64, sid i
 	return data
 }
 
+func (hub *Hub) QueryLast24HoursCandleStick(market string) json.RawMessage {
+	count := 24 * 60
+	//data := make([]json.RawMessage, 0, count)
+	end := getCandleStickEndKey(market, Minute, 0, 0)
+	start := getCandleStickStartKey(market, Minute)
+	hub.dbMutex.RLock()
+	iter := hub.db.ReverseIterator(start, end)
+	defer func() {
+		iter.Close()
+		hub.dbMutex.RUnlock()
+	}()
+
+    subList := []baseCandleStick{}
+	
+	for ; iter.Valid(); iter.Next() {
+		var candleStick baseCandleStick
+		
+		if err := json.Unmarshal(iter.Value(),&candleStick); err != nil {
+			subList = append(subList, candleStick)
+		}
+		if count--; count == 0 {
+			break
+		}
+	}
+
+	result := merge(subList)
+	v,_ := json.Marshal(result)
+	return json.RawMessage(v)
+}
+
 func (hub *Hub) QueryTxByHashID(hexHashID string) json.RawMessage {
 	hub.dbMutex.RLock()
 	defer hub.dbMutex.RUnlock()
