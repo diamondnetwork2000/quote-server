@@ -132,7 +132,8 @@ func (hub *Hub) QueryCandleStick(market string, timespan byte, time int64, sid i
 func (hub *Hub) QueryLast24HoursCandleStick(market string) json.RawMessage {
 	count := 24 * 60
 	//data := make([]json.RawMessage, 0, count)
-	end := getCandleStickEndKey(market, Minute, 0, 0)
+	timestamp := gotime.Now().Unix()
+	end := getCandleStickEndKey(market, Minute, timestamp, 0)
 	start := getCandleStickStartKey(market, Minute)
 	hub.dbMutex.RLock()
 	iter := hub.db.ReverseIterator(start, end)
