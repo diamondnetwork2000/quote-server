@@ -147,7 +147,7 @@ func (hub *Hub) QueryLast24HoursCandleStick(market string) json.RawMessage {
 	for ; iter.Valid(); iter.Next() {
 		var candleStick baseCandleStick
 		
-		if err := json.Unmarshal(iter.Value(),&candleStick); err != nil {
+		if err := json.Unmarshal(iter.Value(),&candleStick); err == nil {
 			subList = append(subList, candleStick)
 		}
 		if count--; count == 0 {
