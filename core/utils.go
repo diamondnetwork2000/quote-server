@@ -71,6 +71,29 @@ func merge(subList []baseCandleStick) (cs baseCandleStick) {
 	return
 }
 
+func sum(subList []baseCandleStick) (cs baseCandleStick) {
+	cs = newBaseCandleStick()
+	for _, sub := range subList {
+		if !cs.hasDeal() {
+			cs.OpenPrice = sub.OpenPrice
+		}
+		cs.ClosePrice = sub.ClosePrice
+		if !cs.hasDeal() {
+			cs.HighPrice = sub.HighPrice
+			cs.LowPrice = sub.LowPrice
+		} else {
+			if cs.HighPrice.LT(sub.HighPrice) {
+				cs.HighPrice = sub.HighPrice
+			}
+			if cs.LowPrice.GT(sub.LowPrice) {
+				cs.LowPrice = sub.LowPrice
+			}
+		}
+		cs.TotalDeal = cs.TotalDeal.Add(sub.TotalDeal)
+	}
+	return
+}
+
 // Merge the PricePoints at the granularity defined by 'level'
 // Returns a depth map
 func mergePrice(updated []*PricePoint, level string, isBuy bool) map[string]*PricePoint {

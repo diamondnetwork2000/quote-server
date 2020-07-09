@@ -155,7 +155,7 @@ func (hub *Hub) QueryLast24HoursCandleStick(market string) json.RawMessage {
 		}
 	}
 
-	result := merge(subList)
+	result := sum(subList)
 	v,_ := json.Marshal(result)
 	return json.RawMessage(v)
 }
