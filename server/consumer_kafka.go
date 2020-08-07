@@ -77,6 +77,12 @@ func (tc *TradeConsumer) Consume() {
 			offset++
 		}
 		pc, err := tc.ConsumePartition(tc.topic, partition, offset)
+		if err != nil && strings.Contains(err.Error(),"offset is outside") {
+			//如果本地保存的offset和kafka不一致，则从头开始
+			offset = sarama.OffsetOldest
+			pc, err = tc.ConsumePartition(tc.topic, partition, offset)
+		}
+
 		if err != nil {
 			log.WithError(err).Errorf("Failed to start consumer for partition %d", partition)
 			continue
